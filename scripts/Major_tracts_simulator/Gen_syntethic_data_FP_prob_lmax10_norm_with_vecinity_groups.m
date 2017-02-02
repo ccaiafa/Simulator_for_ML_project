@@ -3,9 +3,10 @@ clear
 clc
 %diary on
 
+dataRootPath = '/N/dc2/projects/lifebid/2t1/predator/';
 dataRootPathSTC = '/N/dc2/projects/lifebid/code/ccaiafa/Caiafa_Pestilli_paper2015/Results/ETC_Dec2015/Single_TC/';
-dataOutputPath = '/N/dc2/projects/lifebid/code/ccaiafa/Simulator/results/Major_tracts_prediction/';
-subject = 'FP';
+dataOutputPath = '/N/dc2/projects/lifebid/code/ccaiafa/Simulator/results/Major_tracts_prediction/reduced_dict/';
+subject = 'FP_96dirs_b2000_1p5iso';
 
 %vista_soft_path = '/N/dc2/projects/lifebid/code/vistasoft/';
 %addpath(genpath(vista_soft_path));
@@ -19,11 +20,41 @@ addpath(genpath(new_LiFE_path));
 
 lparam = 'lmax10';
 alg = 'PROB';
-conn = 'connNUM01';
+conn = 'NUM01';
 
-%% load fe structure
-fe_structureFile = deblank(ls(char(fullfile(dataRootPathSTC,'FP',strcat('fe_structure_*',subject,'_96dirs_b2000_1p5iso','*run01','*',alg,'*',lparam,'*',conn,'.mat'))))); 
-load(fe_structureFile);
+%% load fe structure (if it is already created, if not it is created in the lines below)
+%fe_structureFile = deblank(ls(char(fullfile(dataRootPathSTC,'FP',strcat('fe_structure_*',subject,'*run01','*',alg,'*',lparam,'*',conn,'.mat'))))); 
+%load(fe_structureFile);
+
+%% Create fe structure with optimized weights (LiFE)
+% Read fibers
+fgFileName    = deblank(ls(fullfile(dataRootPath,subject,'fibers_new', strcat('run01*',char(lparam),'*',char(alg),'*',conn,'*','500000.tck'))));
+fg = dtiImportFibersMrtrix(fgFileName);
+fg_struct.fg = fg;
+
+% Create fe structure
+feFileName    = 'model_with_L32'; 
+
+dwiFile       = deblank(ls(fullfile(dataRootPath,subject,'diffusion_data','run01*.nii.gz')));
+dwiFileRepeat = deblank(ls(fullfile(dataRootPath,subject,'diffusion_data','run02*.nii.gz')));
+t1File        = deblank(fullfile(dataRootPath,subject,'anatomy',  't1.nii.gz'));
+
+% Number of iterations for the optimization
+Niter = 500;
+L = 33; % Number of discretization steps
+tic
+
+% Build the model
+fe = feConnectomeInit(dwiFile,fg_struct.fg,feFileName,[],dwiFileRepeat,t1File,L,[1,0],0); % We set dwiFileRepeat =  run 02
+clear 'fg_struct'
+disp(' ')
+disp(['Time for model construction ','(L=',num2str(L),')=',num2str(toc),'secs']);
+
+%% Fit the LiFE_SF model (Optimization)
+tic
+fe = feSet(fe,'fit',feFitModel(fe.life.M,feGet(fe,'dsigdemeaned'),'bbnnls',Niter,'preconditioner'));
+disp(' ')
+
 
 %% Normalization (divide lateral slices of Phi by S0(v))
 vox = fe.life.M.Phi.subs(:,2);
@@ -75,11 +106,11 @@ fe.life.M.Voxels.coords = fe.roi.coords';
 fe.life.M.Voxels.vicinity = compute_NN_groups_vox(fe.life.M.Voxels.coords);
 
 disp('SAVING RESULTS...')
-save(fullfile(dataOutputPath,sprintf('fe_struct_with_predicted_signal_from_Arcuate_norm%s_%s_%s_%s.mat',subject,num2str(alg),num2str(lparam),num2str(conn))), 'fe','-v7.3')
+save(fullfile(dataOutputPath,sprintf('fe_struct_with_predicted_signal_from_Arcuate_norm%s_%s_%s_%s_L%s.mat',subject,num2str(alg),num2str(lparam),num2str(conn),num2str(L))), 'fe','-v7.3')
 
 
 fit_on_predicted = feFitModel(fe.life.M, predicted_signal, 'bbnnls', 500, 'preconditioner');
-save(fullfile(dataOutputPath,sprintf('fit_on_predicted_sginal_%s_%s_%s_%s.mat',subject,num2str(alg),num2str(lparam),num2str(conn))), 'fit_on_predicted','-v7.3')
+save(fullfile(dataOutputPath,sprintf('fit_on_predicted_sginal_%s_%s_%s_%s_L%s.mat',subject,num2str(alg),num2str(lparam),num2str(conn),num2str(L))), 'fit_on_predicted','-v7.3')
 
 
 % % Compute errors predicted - measured
