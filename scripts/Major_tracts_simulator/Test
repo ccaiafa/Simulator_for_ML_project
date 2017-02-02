@@ -1,0 +1,9 @@
+orient = fe.life.M.Atoms.orient;
+vic = fe.life.M.Atoms.vicinity;
+
+a = 10;
+x= [0;orient(1,a)];
+y= [0;orient(2,a)];
+z= [0;orient(3,a)];
+
+plot3(x,y,z)
