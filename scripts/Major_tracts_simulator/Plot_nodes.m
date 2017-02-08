@@ -5,7 +5,7 @@ clc
 new_LiFE_path = '/N/dc2/projects/lifebid/code/ccaiafa/Caiafa_Pestilli_paper2015/lifebid/';
 addpath(genpath(new_LiFE_path));
 
-fe_structure_Path = '/N/dc2/projects/lifebid/code/ccaiafa/Simulator/results/Major_tracts_prediction/fe_struct_with_predicted_signal_from_Arcuate_FP_PROB_lmax10_connNUM01.mat';
+fe_structure_Path = '/N/dc2/projects/lifebid/code/ccaiafa/Simulator/results/Major_tracts_prediction/reduced_dict/fe_struct_with_predicted_signal_from_Arcuate_normFP_96dirs_b2000_1p5iso_PROB_lmax10_NUM01_L33.mat';
 load(fe_structure_Path)
 
 % Get indices of nodes

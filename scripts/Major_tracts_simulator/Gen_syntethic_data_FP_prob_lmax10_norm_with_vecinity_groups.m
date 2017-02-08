@@ -59,23 +59,25 @@ disp(' ')
 %% Normalization (divide lateral slices of Phi by S0(v))
 vox = fe.life.M.Phi.subs(:,2);
 vals = fe.life.M.Phi.vals;
-S0 = feGet(fe,'s0_img');
+S0 = mean(feGet(fe,'s0_img'),2);
 vals = vals./S0(vox);
 fe.life.M.Phi = sptensor(fe.life.M.Phi.subs,vals,size(fe.life.M.Phi));
 
 %ind = find(~isnan(fe.life.fit.weights)&fe.life.fit.weights>0);
 
-ind = find(fe.life.fit.weights>0);
+ind_nnz = find(fe.life.fit.weights>0);
 
-TractsFile = deblank(ls(char(fullfile(dataRootPathSTC,strcat('fe_structure_*',subject,'*_STC_','*run01','*',alg,'*',lparam,'*',conn,'_TRACTS.mat')))));
+TractsFile = deblank(ls(char(fullfile(dataRootPathSTC,strcat('fe_structure_*',subject,'*_STC_','*run01','*',alg,'*',lparam,'*',conn,'_TRACTS-nocull.mat')))));
 load(TractsFile);
-if length(ind)~=length(classification.index)
-    disp('WARNING!: nnz weights number does not match with the numer of fibers in the tracts')
-    keyboard
-end
+%if length(ind)~=length(classification.index)
+%    disp('WARNING!: nnz weights number does not match with the numer of fibers in the tracts')
+%    keyboard
+%end
 
 ind_fascicles = find(classification.index==19); % Arcuate
-ind_fascicles = ind(ind_fascicles); % indices to major tract fascicles
+%ind_fascicles = ind(ind_fascicles); % indices to major tract fascicles
+ind_fascicles = intersect(ind_nnz, ind_fascicles);
+
 
 %new_weights = zeros(size(fe.life.fit.weights));
 new_weights = fe.life.fit.weights(ind_fascicles);

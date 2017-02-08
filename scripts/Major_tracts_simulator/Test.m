@@ -7,8 +7,8 @@ lparam = 'lmax10';
 alg = 'PROB';
 conn = 'connNUM01';
 
-dataOutputPath = '/N/dc2/projects/lifebid/code/ccaiafa/Simulator/results/Major_tracts_prediction/';
-fe_structureFile = deblank(ls(char(fullfile(dataOutputPath,strcat('fe_struct_with_predicted_signal_from_Arcuate_norm',subject,'*',alg,'*',lparam,'*',conn,'.mat'))))); 
+dataOutputPath = '/N/dc2/projects/lifebid/code/ccaiafa/Simulator/results/Major_tracts_prediction/reduced_dict/';
+fe_structureFile = deblank(ls(char(fullfile(dataOutputPath,'fe_struct_with_predicted_signal_from_Arcuate_normFP_96dirs_b2000_1p5iso_PROB_lmax10_NUM01_L33.mat')))); 
 load(fe_structureFile);
 
 %% plot atom and its neighbors
