@@ -8,14 +8,15 @@ dataRootPathSTC = '/N/dc2/projects/lifebid/code/ccaiafa/Caiafa_Pestilli_paper201
 dataOutputPath = '/N/dc2/projects/lifebid/code/ccaiafa/Simulator/results/Major_tracts_prediction/reduced_dict/';
 subject = 'FP_96dirs_b2000_1p5iso';
 
-%vista_soft_path = '/N/dc2/projects/lifebid/code/vistasoft/';
-%addpath(genpath(vista_soft_path));
+vista_soft_path = '/N/dc2/projects/lifebid/code/vistasoft/';
+addpath(genpath(vista_soft_path));
 
 %mba_soft_path = '/N/dc2/projects/lifebid/code/mba';
 %addpath(genpath(mba_soft_path));
 
 % Define path to the NEW LiFE
-new_LiFE_path = '/N/dc2/projects/lifebid/code/ccaiafa/Caiafa_Pestilli_paper2015/lifebid/';
+%new_LiFE_path = '/N/dc2/projects/lifebid/code/ccaiafa/Caiafa_Pestilli_paper2015/lifebid/';
+new_LiFE_path = '/N/dc2/projects/lifebid/code/ccaiafa/Caiafa_Pestilli_paper2015/Revision_Feb2017/encode/';
 addpath(genpath(new_LiFE_path));
 
 lparam = 'lmax10';
@@ -55,7 +56,7 @@ tic
 fe = feSet(fe,'fit',feFitModel(fe.life.M,feGet(fe,'dsigdemeaned'),'bbnnls',Niter,'preconditioner'));
 disp(' ')
 
-
+save(fullfile(dataOutputPath,sprintf('fe_struct_with_predicted_signal_from_Arcuate_NOT_norm_FULL%s_%s_%s_%s_L%s.mat',subject,num2str(alg),num2str(lparam),num2str(conn),num2str(L))), 'fe','-v7.3')
 %% Normalization (divide lateral slices of Phi by S0(v))
 vox = fe.life.M.Phi.subs(:,2);
 vals = fe.life.M.Phi.vals;
@@ -64,6 +65,9 @@ vals = vals./S0(vox);
 fe.life.M.Phi = sptensor(fe.life.M.Phi.subs,vals,size(fe.life.M.Phi));
 
 %ind = find(~isnan(fe.life.fit.weights)&fe.life.fit.weights>0);
+
+save(fullfile(dataOutputPath,sprintf('fe_struct_with_predicted_signal_from_Arcuate_norm_FULL%s_%s_%s_%s_L%s.mat',subject,num2str(alg),num2str(lparam),num2str(conn),num2str(L))), 'fe','-v7.3')
+
 
 ind_nnz = find(fe.life.fit.weights>0);
 
@@ -78,6 +82,8 @@ ind_fascicles = find(classification.index==19); % Arcuate
 %ind_fascicles = ind(ind_fascicles); % indices to major tract fascicles
 ind_fascicles = intersect(ind_nnz, ind_fascicles);
 
+%save(fullfile(dataOutputPath,sprintf('Arcuate_fascicles_indices_%s_%s_%s_%s_L%s.mat',subject,num2str(alg),num2str(lparam),num2str(conn),num2str(L))), 'ind_fascicles','-v7.3')
+
 
 %new_weights = zeros(size(fe.life.fit.weights));
 new_weights = fe.life.fit.weights(ind_fascicles);
@@ -85,10 +91,11 @@ new_weights = fe.life.fit.weights(ind_fascicles);
 fe.life.fit.weights = new_weights; % keep weights 
 fe.life.M.Phi = fe.life.M.Phi(:,:,ind_fascicles);
 
+
 %% Gen predicted signal
 predicted_signal = feGet(fe,'pSig fiber');
 fe.life.predicted_signal_demean = predicted_signal;
-
+fe.fg.fibers = fe.fg.fibers(ind_fascicles);
 
 %% Gen Measured signal
 nBvecs  = feGet(fe,'nBvecs');
